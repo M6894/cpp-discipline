@@ -2,35 +2,171 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <exception>
+#include <vector>
+#include <map>
+#include <set>
 
 using namespace std;
 
 class Date {
 public:
-    int GetYear() const;
-    int GetMonth() const;
-    int GetDay() const;
+    Date();
+
+    Date(vector<int> input_date) {
+        year = input_date[0];
+        month = input_date[1];
+        day = input_date[2];
+        /*
+        if (input) {
+            // Сохраняем введенную дату для вывода ошибки
+            string input_date;
+            getline(input, input_date, ' ');
+
+            stringstream user_date(input_date);
+
+            int y, m, d;
+            char def1, def2;
+            user_date >> y >> def1 >> m >> def2 >> d;
+            if (!user_date) {
+                throw runtime_error(input_date);
+            } else {
+                if (m > 12 || m < 1) {
+                    throw invalid_argument("Month value is invalid: " + to_string(m));
+                } else if (d > 31 || d < 1) {
+                    throw invalid_argument("Day value is invalid: " + to_string(d));
+                } else {
+                    year = y;
+                    month = m;
+                    day = d;
+                }                
+            }
+        }
+        */
+    }
+    int GetYear() const {
+        return year;
+    }
+    int GetMonth() const {
+        return month;
+    }
+    int GetDay() const {
+        return day;
+    }
+
+private:
+    int year = 0;
+    int month = 0;
+    int day = 0;
 };
 
-bool operator<(const Date& lhs, const Date& rhs);
+bool operator<(const Date& lhs, const Date& rhs) {
+    if (lhs.GetYear() != rhs.GetYear()) {
+        return lhs.GetYear() < rhs.GetYear();
+    } else if (lhs.GetMonth() != rhs.GetMonth()) {
+        return lhs.GetMonth() < rhs.GetMonth();
+    } else {
+        return lhs.GetDay() < rhs.GetDay();
+    }
+}
 
 class Database {
 public:
-    void AddEvent(const Date& date, const string& event);
+    void AddEvent(const Date& date, const string& event) {
+        if (data.count(date) > 0) {
+            bool event_exists = false;
+            for (auto d : data[date]) {
+                if (d == event) { 
+                    event_exists = true;
+                    break;
+                }
+            }
+            if (!event_exists) {
+                data[date].insert(event);
+                cout << "added!" << endl;
+            }
+        } else {
+            data[date].insert(event);
+            cout << "added!" << endl;
+        }
+    }
     bool DeleteEvent(const Date& date, const string& event);
     int  DeleteDate(const Date& date);
 
     /* ??? */ // Find(const Date& date) const;
   
     void Print() const;
+private:
+    map<Date, set<string>> data;
 };
+
+vector<int> ParseDate(istream& input) {
+    if (input) {
+        // Сохраняем введенную дату для вывода ошибки
+        string input_date;
+        getline(input, input_date, ' ');
+
+        stringstream user_date(input_date);
+
+        int y, m, d;
+        char def1, def2;
+        try {
+            user_date >> y >> def1 >> m >> def2 >> d;
+            if (!user_date) {
+                throw runtime_error(input_date);
+            // } else if (def1 != '-' || def2 != '-') {
+                // throw runtime_error(input_date); 
+            } else if (user_date.peek() != EOF) {
+                throw runtime_error(input_date); 
+            } else {
+                if (m > 12 || m < 1) {
+                    throw invalid_argument("Month value is invalid: " + to_string(m));
+                } else if (d > 31 || d < 1) {
+                    throw invalid_argument("Day value is invalid: " + to_string(d));
+                } else {
+                    return {y, m, d};
+                }                
+            }
+        } catch (const runtime_error& ex) {
+            cout << "Wrong date format: " << ex.what() << endl;
+        } catch (const invalid_argument& arg) {
+            cout << arg.what() << endl;
+        }
+    }
+    return {0, 0, 0};
+}
 
 int main() {
     Database db;
         
     string command;
     while (getline(cin, command)) {
-        // Считайте команды с потока ввода и обработайте каждую
+        // Считайте команды с потока ввода и обработайте каждую        
+        stringstream user_input(command);
+        string task;
+
+        user_input >> task;
+        user_input.ignore(1); // Пропуск пробела после команды
+        if (task == "Add") {
+            // Date
+            Date date = ParseDate(user_input);            
+            // Event
+            if (date.GetMonth() != 0) {
+                string event;
+                getline(user_input, event);
+                cout << event << "\n";
+                db.AddEvent(date, event);
+            }
+        } else if (task == "Del") {
+
+        } else if (task == "Find") {
+
+        } else if (task == "Print") {
+
+        } else {
+            cout << "Unknown command: " << task << endl;
+        }
     }
 
     return 0;
