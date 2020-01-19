@@ -7,43 +7,17 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <iomanip>
 
 using namespace std;
 
 class Date {
 public:
     Date();
-
     Date(vector<int> input_date) {
         year = input_date[0];
         month = input_date[1];
         day = input_date[2];
-        /*
-        if (input) {
-            // Сохраняем введенную дату для вывода ошибки
-            string input_date;
-            getline(input, input_date, ' ');
-
-            stringstream user_date(input_date);
-
-            int y, m, d;
-            char def1, def2;
-            user_date >> y >> def1 >> m >> def2 >> d;
-            if (!user_date) {
-                throw runtime_error(input_date);
-            } else {
-                if (m > 12 || m < 1) {
-                    throw invalid_argument("Month value is invalid: " + to_string(m));
-                } else if (d > 31 || d < 1) {
-                    throw invalid_argument("Day value is invalid: " + to_string(d));
-                } else {
-                    year = y;
-                    month = m;
-                    day = d;
-                }                
-            }
-        }
-        */
     }
     int GetYear() const {
         return year;
@@ -61,6 +35,17 @@ private:
     int day = 0;
 };
 
+ostream& operator<<(ostream& output, const Date& date) {
+    cout << setw(4) << setfill('0') << date.GetYear() << "-" << setw(2) << date.GetMonth() << "-" << setw(2) << date.GetDay();
+    return output;
+}
+
+void PrintDate(const Date& date, const set<string>& events) {
+    for (const auto& e : events) {
+        cout << date << " " << e << endl;
+    }
+}
+
 bool operator<(const Date& lhs, const Date& rhs) {
     if (lhs.GetYear() != rhs.GetYear()) {
         return lhs.GetYear() < rhs.GetYear();
@@ -76,7 +61,7 @@ public:
     void AddEvent(const Date& date, const string& event) {
         if (data.count(date) > 0) {
             bool event_exists = false;
-            for (auto d : data[date]) {
+            for (const auto& d : data[date]) {
                 if (d == event) { 
                     event_exists = true;
                     break;
@@ -84,19 +69,49 @@ public:
             }
             if (!event_exists) {
                 data[date].insert(event);
-                cout << "added!" << endl;
             }
         } else {
             data[date].insert(event);
-            cout << "added!" << endl;
         }
     }
-    bool DeleteEvent(const Date& date, const string& event);
-    int  DeleteDate(const Date& date);
+    bool DeleteEvent(const Date& date, const string& event) {
+        if (data.count(date) > 0) {
+            for (auto& d : data[date]) {
+                if (d == event) { 
+                    if (data[date].size() > 1) { // There are many events
+                        data[date].erase(d);
+                    } else { // There is only 1 event at the date
+                        data.erase(date);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    int  DeleteDate(const Date& date) {
+        int events_at_date = 0;
+        if (data.count(date) > 0) {
+            events_at_date = data[date].size();
+            data.erase(date);
+        }
+        return events_at_date;
+    }
 
-    /* ??? */ // Find(const Date& date) const;
+    void Find(const Date& date) const {
+        if (data.count(date) > 0) {
+            set<string> events = data.at(date);
+            for (const auto& e : events) {
+                cout << e << endl;
+            }
+        }
+    }
   
-    void Print() const;
+    void Print() const {
+        for (const auto& d : data) {
+            PrintDate(d.first, d.second);
+        }
+    }
 private:
     map<Date, set<string>> data;
 };
@@ -115,8 +130,8 @@ vector<int> ParseDate(istream& input) {
             user_date >> y >> def1 >> m >> def2 >> d;
             if (!user_date) {
                 throw runtime_error(input_date);
-            // } else if (def1 != '-' || def2 != '-') {
-                // throw runtime_error(input_date); 
+            } else if (def1 != '-' || def2 != '-') {
+                throw runtime_error(input_date); 
             } else if (user_date.peek() != EOF) {
                 throw runtime_error(input_date); 
             } else {
@@ -155,17 +170,47 @@ int main() {
             if (date.GetMonth() != 0) {
                 string event;
                 getline(user_input, event);
-                cout << event << "\n";
                 db.AddEvent(date, event);
+            } else {
+                return 0;
             }
         } else if (task == "Del") {
-
+            // Date
+            Date date = ParseDate(user_input);
+            // Check for event
+            if (date.GetMonth() != 0) {
+                if (user_input.peek() != EOF) { // Checks whether the event exists in input or not
+                    // Event input exists
+                    string event;
+                    getline(user_input, event);
+                    if (db.DeleteEvent(date, event)) {
+                        cout << "Deleted successfully" << endl;
+                    } else {
+                        cout << "Event not found" << endl;
+                    }
+                } else {
+                    // No event, purge the date
+                    int deleted_events_count = db.DeleteDate(date);
+                    cout << "Deleted " << deleted_events_count << " events" << endl;
+                }
+            } else {
+                return 0;
+            }
         } else if (task == "Find") {
-
+            // Date
+            Date date = ParseDate(user_input);
+            if (date.GetMonth() != 0) {
+                db.Find(date);
+            } else {
+                return 0;
+            }
         } else if (task == "Print") {
-
+            db.Print();
+        } else if (task.empty()) {
+            // Do nothing
         } else {
             cout << "Unknown command: " << task << endl;
+            return 0;
         }
     }
 
