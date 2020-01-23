@@ -45,18 +45,18 @@ public:
         }
     }
     int At(const int& row, const int& col) const {
-        int rows = data.size() -1; 
-        int cols = data[0].size() -1;
-        if (row > rows || col > cols || row < 0 || col < 0) {
+        // int rows = data.size() -1; 
+        // int cols = data[0].size() -1;
+        if (row > static_cast<int>(data.size()) -1 || col > static_cast<int>(data[0].size()) -1 || row < 0 || col < 0) {
             throw out_of_range("Out of range");
         } else {
             return data[row][col];
         }
     }
     int& At(const int& row, const int& col) {
-        int rows = data.size() -1; 
-        int cols = data[0].size() -1;
-        if (row > rows || col > cols || row < 0 || col < 0) {
+        // int rows = data.size() -1; 
+        // int cols = data[0].size() -1;
+        if (row > static_cast<int>(data.size()) -1 || col > static_cast<int>(data[0].size()) -1 || row < 0 || col < 0) {
             throw out_of_range("Out of range");
         } else {
             return data[row][col];
@@ -98,13 +98,13 @@ ostream& operator<<(ostream& output, const Matrix& matrix) {
 
 Matrix operator+(const Matrix& lhs, const Matrix& rhs) {
     Matrix result;
-    if (lhs.data.empty() || rhs.data.empty()) {
-        if (lhs.data.empty() && rhs.data.empty()) {
-            return result;
-        } else {
-            throw invalid_argument("Different matrix sizes");
-        }
-    } else if (lhs.GetNumRows() != rhs.GetNumRows() && lhs.GetNumColumns() != rhs.GetNumColumns()) {
+    // if (lhs.data.empty() || rhs.data.empty()) {
+    //     if (lhs.data.empty() && rhs.data.empty()) {
+    //         return result;
+    //     } else {
+    //         throw invalid_argument("Different matrix sizes");
+    //     }
+    if (lhs.GetNumRows() != rhs.GetNumRows() || lhs.GetNumColumns() != rhs.GetNumColumns()) {
         throw invalid_argument("Different matrix sizes");
     } else {
         int rows_index = lhs.GetNumRows() -1;
@@ -117,25 +117,36 @@ Matrix operator+(const Matrix& lhs, const Matrix& rhs) {
         }
         return result;
     }
-    // return result;
+}
+
+bool operator==(const Matrix& lhs, const Matrix& rhs) {
+    if (lhs.data == rhs.data) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 int main() {
     Matrix one;
     Matrix two;
-    Matrix three;
+    Matrix three(2, 2);
     Matrix four;
 
-    stringstream s("2 2 1 1 2 2 2 2 1 1 2 2");
+    // stringstream s("2 2 1 1 2 2 2 2 1 1 2 2");
+    stringstream s("0 0 0 0");
     s >> one >> two;
 
     // cin >> one >> two;
     // cout << one + two << endl;
-
-    cout << three + four << endl;
+    if (one == two) {
+        cout << "Ok!" << endl;
+    }
+    // cout << three + four << endl;
     // cout << three + one << endl;
-    cout << "Three size: " << three.data.size() << three.data[0].size() << endl;
-    three.Reset(3, 3);
+    cout << "Old size: " << one.data.size() << one.data[0].size() << endl;
+    // three.Reset(3, 3);
+    three = one + two;
     cout << "Three size: " << three.data.size() << three.data[0].size() << endl;
     
     // cout << one.At(1, 1) << endl;
