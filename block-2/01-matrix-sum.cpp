@@ -2,6 +2,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -19,29 +20,47 @@ public:
     }
     Matrix(const int& num_rows, const int& num_cols) {
         if (num_rows < 0 || num_cols < 0) {
-            // throw out_of_range();
+            throw out_of_range("Negative");
+        } else {
+            vector<vector<int>> temp_col(num_rows); // Создаем список строк
+            for (auto& row : temp_col) {
+                vector<int> temp_row(num_cols);
+                row = temp_row; // Создаем столбцы
+            }
+            data = temp_col;
         }
-        vector<vector<int>> temp_col(num_rows); // Создаем список строк
-        for (auto row : temp_col) {
-            vector<int> temp_row(num_cols);
-            temp_col.push_back(temp_row); // Создаем столбцы
-        }
-        data = temp_col;
     }
     void Reset(const int& num_rows, const int& num_cols) {
-        data.clear();
-        vector<vector<int>> temp_col(num_rows); // Создаем список строк
-        for (auto row : temp_col) {
-            vector<int> temp_row(num_cols, 0); // Обнуление
-            temp_col.push_back(temp_row); // Создаем столбцы
+        // Matrix temp(num_rows, num_cols);
+        // data = temp.data;
+        if (num_rows < 0 || num_cols < 0) {
+            throw out_of_range("Negative");
+        } else {
+            vector<vector<int>> temp_col(num_rows); // Создаем список строк
+            for (auto& row : temp_col) {
+                vector<int> temp_row(num_cols);
+                row = temp_row; // Создаем столбцы
+            }
+            data = temp_col;
         }
-        data = temp_col;
     }
     int At(const int& row, const int& col) const {
-        return data[row][col];
+        int rows = data.size() -1; 
+        int cols = data[0].size() -1;
+        if (row > rows || col > cols || row < 0 || col < 0) {
+            throw out_of_range("Out of range");
+        } else {
+            return data[row][col];
+        }
     }
     int& At(const int& row, const int& col) {
-        return data[row][col];
+        int rows = data.size() -1; 
+        int cols = data[0].size() -1;
+        if (row > rows || col > cols || row < 0 || col < 0) {
+            throw out_of_range("Out of range");
+        } else {
+            return data[row][col];
+        }
     }
     int GetNumRows() const {
         return data.size();
@@ -49,16 +68,80 @@ public:
     int GetNumColumns() const {
         return data[0].size();
     }
-private:
-    vector<vector<int>> data;
+public:
+    vector<vector<int>> data = {{}};
 };
+
+istream& operator>>(istream& input, Matrix& matrix) {
+    int num_rows, num_cols;
+    input >> num_rows >> num_cols;
+    Matrix temp_matrix(num_rows, num_cols);
+    for (auto& row : temp_matrix.data) {
+        for (auto& num : row) {
+            input >> num;
+        }
+    }
+    matrix = temp_matrix;
+    return input;
+}
+
+ostream& operator<<(ostream& output, const Matrix& matrix) {
+    output << matrix.GetNumRows() << " " << matrix.GetNumColumns() << endl;
+    for (const auto& row : matrix.data) {
+        for (const int& num : row) {
+            output << num << " ";
+        }
+        output << endl;
+    }
+    return output;
+}
+
+Matrix operator+(const Matrix& lhs, const Matrix& rhs) {
+    Matrix result;
+    if (lhs.data.empty() || rhs.data.empty()) {
+        if (lhs.data.empty() && rhs.data.empty()) {
+            return result;
+        } else {
+            throw invalid_argument("Different matrix sizes");
+        }
+    } else if (lhs.GetNumRows() != rhs.GetNumRows() && lhs.GetNumColumns() != rhs.GetNumColumns()) {
+        throw invalid_argument("Different matrix sizes");
+    } else {
+        int rows_index = lhs.GetNumRows() -1;
+        int cols_index = lhs.GetNumColumns() -1;
+        Matrix result (lhs.GetNumRows(), lhs.GetNumColumns());
+        for (int row_index = 0; row_index <= rows_index; row_index++) {
+            for (int num_index = 0; num_index <= cols_index; num_index++) {
+                result.data[row_index][num_index] = lhs.At(row_index, num_index) + rhs.At(row_index, num_index);
+            }
+        }
+        return result;
+    }
+    // return result;
+}
 
 int main() {
     Matrix one;
     Matrix two;
+    Matrix three;
+    Matrix four;
+
+    stringstream s("2 2 1 1 2 2 2 2 1 1 2 2");
+    s >> one >> two;
 
     // cin >> one >> two;
     // cout << one + two << endl;
+
+    cout << three + four << endl;
+    // cout << three + one << endl;
+    cout << "Three size: " << three.data.size() << three.data[0].size() << endl;
+    three.Reset(3, 3);
+    cout << "Three size: " << three.data.size() << three.data[0].size() << endl;
+    
+    // cout << one.At(1, 1) << endl;
+    // cout << three.At(2, 3) << endl;
+    // cout << three.At(0, 4) << endl;
+
     return 0;
 }
 
@@ -91,7 +174,6 @@ int main() {
 ячейке матрицы
 константные методы GetNumRows и GetNumColumns, которые возвращают количество строк и столбцов 
 матрицы соответственно
-
 Если количество строк или количество столбцов, переданное в конструктор класса Matrix или метод 
 Reset, оказалось отрицательным, то должно быть выброшено стандартное исключение out_of_range.
 
@@ -108,6 +190,7 @@ Reset, оказалось отрицательным, то должно быть
 оператор проверки на равенство (==): он должен возвращать true, если сравниваемые матрицы имеют 
 одинаковый размер и все их соответствующие элементы равны между собой, в противном случае он должен 
 возвращать false.
+
 оператор сложения: он должен принимать две матрицы и возвращать новую матрицу, которая является их 
 суммой; если переданные матрицы имеют разные размеры этот оператор должен выбрасывать стандартное 
 исключение invalid_argument.
