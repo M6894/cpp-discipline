@@ -66,7 +66,11 @@ public:
         return data.size();
     }
     int GetNumColumns() const {
-        return data[0].size();
+        if (static_cast<int>(data.size()) > 0) {
+            return data[0].size();
+        } else {
+            return 0;
+        }
     }
 public:
     vector<vector<int>> data = {{}};
@@ -98,13 +102,10 @@ ostream& operator<<(ostream& output, const Matrix& matrix) {
 
 Matrix operator+(const Matrix& lhs, const Matrix& rhs) {
     Matrix result;
-    // if (lhs.data.empty() || rhs.data.empty()) {
-    //     if (lhs.data.empty() && rhs.data.empty()) {
-    //         return result;
-    //     } else {
-    //         throw invalid_argument("Different matrix sizes");
-    //     }
-    if (lhs.GetNumRows() != rhs.GetNumRows() || lhs.GetNumColumns() != rhs.GetNumColumns()) {
+    if ((lhs.GetNumRows() || lhs.GetNumColumns()) && (rhs.GetNumRows() || rhs.GetNumColumns())) {
+        Matrix sum(lhs.GetNumRows, lhs.GetNumColumns);
+        return sum; // TODO: check with 
+    } else if (lhs.GetNumRows() != rhs.GetNumRows() || lhs.GetNumColumns() != rhs.GetNumColumns()) {
         throw invalid_argument("Different matrix sizes");
     } else {
         int rows_index = lhs.GetNumRows() -1;
@@ -134,21 +135,56 @@ int main() {
     Matrix four;
 
     // stringstream s("2 2 1 1 2 2 2 2 1 1 2 2");
-    stringstream s("0 0 0 0");
-    s >> one >> two;
+    // stringstream s("2 2 3 3 4 4 2 2 0 0 0 0");
+    // s >> one >> two;
 
-    // cin >> one >> two;
-    // cout << one + two << endl;
-    if (one == two) {
-        cout << "Ok!" << endl;
+    uint8_t rows = rand();
+    uint8_t cols = rand();
+    if (rows < 0) {
+        rows *= -1;
     }
+    if (cols < 0) {
+        cols *= -1;
+    }
+    if (rows == 0) {
+        cols = 0;
+    }
+    Matrix lhs(rows, cols);
+    Matrix rhs(rows, cols);
+    for (auto& row : lhs.data) {
+        for (auto& num : row) {
+            uint16_t new_num = rand();
+            num = new_num;
+        }
+    }
+    for (auto& row : rhs.data) {
+        for (auto& num : row) {
+            uint16_t new_num = rand();
+            num = new_num;
+        }
+    }
+
+    cout << lhs + rhs;
+
+    // Input testing
+    // string command;
+    // while (getline(cin, command)) {
+    //     stringstream s(command);
+    //     s >> one >> two;
+    //     cout << one + two << endl;
+    // }
+
+    // if (one == two) {
+    //     cout << "Same matrix" << endl;
+    // }
+
     // cout << three + four << endl;
     // cout << three + one << endl;
-    cout << "Old size: " << one.data.size() << one.data[0].size() << endl;
-    // three.Reset(3, 3);
-    three = one + two;
-    cout << "Three size: " << three.data.size() << three.data[0].size() << endl;
     
+    // cout << "Old size: " << one.data.size() << one.data[0].size() << endl;
+    // three = one + two;
+    // cout << "Three size: " << three.data.size() << three.data[0].size() << endl;
+
     // cout << one.At(1, 1) << endl;
     // cout << three.At(2, 3) << endl;
     // cout << three.At(0, 4) << endl;
