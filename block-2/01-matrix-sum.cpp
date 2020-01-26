@@ -18,35 +18,24 @@ public:
     Matrix() {
         data.clear();
     }
-    Matrix(const int& num_rows, const int& num_cols) {
-        if (num_rows < 0 || num_cols < 0) {
-            throw out_of_range("Negative");
-        } else {
-            vector<vector<int>> temp_col(num_rows); // Создаем список строк
-            for (auto& row : temp_col) {
-                vector<int> temp_row(num_cols);
-                row = temp_row; // Создаем столбцы
-            }
-            data = temp_col;
-        }
+    Matrix(int num_rows, int num_cols) {
+        Reset(num_rows, num_cols);
     }
-    void Reset(const int& num_rows, const int& num_cols) {
-        // Matrix temp(num_rows, num_cols);
-        // data = temp.data;
+    void Reset(int num_rows, int num_cols) {
         if (num_rows < 0 || num_cols < 0) {
             throw out_of_range("Negative");
-        } else {
-            vector<vector<int>> temp_col(num_rows); // Создаем список строк
-            for (auto& row : temp_col) {
-                vector<int> temp_row(num_cols);
-                row = temp_row; // Создаем столбцы
-            }
-            data = temp_col;
         }
+        if (num_rows == 0 || num_cols == 0) {
+            num_rows = 0;           
+        }
+        vector<vector<int>> temp_col(num_rows); // Создаем список строк
+        for (auto& row : temp_col) {
+            vector<int> temp_row(num_cols);
+            row = temp_row; // Создаем столбцы
+        }
+        data = temp_col;
     }
     int At(const int& row, const int& col) const {
-        // int rows = data.size() -1; 
-        // int cols = data[0].size() -1;
         if (row > static_cast<int>(data.size()) -1 || col > static_cast<int>(data[0].size()) -1 || row < 0 || col < 0) {
             throw out_of_range("Out of range");
         } else {
@@ -54,8 +43,6 @@ public:
         }
     }
     int& At(const int& row, const int& col) {
-        // int rows = data.size() -1; 
-        // int cols = data[0].size() -1;
         if (row > static_cast<int>(data.size()) -1 || col > static_cast<int>(data[0].size()) -1 || row < 0 || col < 0) {
             throw out_of_range("Out of range");
         } else {
@@ -63,16 +50,16 @@ public:
         }
     }
     int GetNumRows() const {
-        return data.size();
+        return static_cast<int>(data.size());
     }
     int GetNumColumns() const {
         if (static_cast<int>(data.size()) > 0) {
-            return data[0].size();
+            return static_cast<int>(data[0].size());
         } else {
             return 0;
         }
     }
-public:
+public: // TODO: Make it private
     vector<vector<int>> data = {{}};
 };
 
@@ -101,23 +88,19 @@ ostream& operator<<(ostream& output, const Matrix& matrix) {
 }
 
 Matrix operator+(const Matrix& lhs, const Matrix& rhs) {
-    Matrix result;
-    if ((lhs.GetNumRows() || lhs.GetNumColumns()) && (rhs.GetNumRows() || rhs.GetNumColumns())) {
-        Matrix sum(lhs.GetNumRows, lhs.GetNumColumns);
-        return sum; // TODO: check with 
-    } else if (lhs.GetNumRows() != rhs.GetNumRows() || lhs.GetNumColumns() != rhs.GetNumColumns()) {
-        throw invalid_argument("Different matrix sizes");
-    } else {
-        int rows_index = lhs.GetNumRows() -1;
-        int cols_index = lhs.GetNumColumns() -1;
-        Matrix result (lhs.GetNumRows(), lhs.GetNumColumns());
-        for (int row_index = 0; row_index <= rows_index; row_index++) {
-            for (int num_index = 0; num_index <= cols_index; num_index++) {
-                result.data[row_index][num_index] = lhs.At(row_index, num_index) + rhs.At(row_index, num_index);
-            }
-        }
-        return result;
+    if (lhs.GetNumRows() != rhs.GetNumRows() || lhs.GetNumColumns() != rhs.GetNumColumns()) {
+        throw invalid_argument("Different matrix sizes: " + to_string(lhs.GetNumRows()) + " " + to_string(lhs.GetNumColumns()) 
+                                + " + " + to_string(rhs.GetNumRows()) + " " + to_string(rhs.GetNumColumns()));
     }
+    int rows_index = lhs.GetNumRows() -1;
+    int cols_index = lhs.GetNumColumns() -1;
+    Matrix result (lhs.GetNumRows(), lhs.GetNumColumns());
+    for (int row_index = 0; row_index <= rows_index; row_index++) {
+        for (int num_index = 0; num_index <= cols_index; num_index++) {
+            result.At(row_index, num_index) = lhs.At(row_index, num_index) + rhs.At(row_index, num_index);                
+        }
+    }
+    return result;
 }
 
 bool operator==(const Matrix& lhs, const Matrix& rhs) {
@@ -138,17 +121,18 @@ int main() {
     // stringstream s("2 2 3 3 4 4 2 2 0 0 0 0");
     // s >> one >> two;
 
+    // Random test
     uint8_t rows = rand();
     uint8_t cols = rand();
-    if (rows < 0) {
-        rows *= -1;
-    }
-    if (cols < 0) {
-        cols *= -1;
-    }
-    if (rows == 0) {
-        cols = 0;
-    }
+    // if (rows < 0) {
+    //     rows *= -1;
+    // }
+    // if (cols < 0) {
+    //     cols *= -1;
+    // }
+    // if (rows == 0) {
+    //     cols = 0;
+    // }
     Matrix lhs(rows, cols);
     Matrix rhs(rows, cols);
     for (auto& row : lhs.data) {
@@ -163,7 +147,6 @@ int main() {
             num = new_num;
         }
     }
-
     cout << lhs + rhs;
 
     // Input testing
@@ -193,7 +176,148 @@ int main() {
 }
 
 /* MIPT and Yandex implementation:
+#include <iostream>
+#include <fstream>
+#include <stdexcept>
+#include <vector>
+#include <sstream>
 
+using namespace std;
+
+class Matrix {
+private:
+    int num_rows_;
+    int num_columns_;
+
+    vector<vector<int>> elements_;
+
+public:
+    Matrix() {
+        num_rows_ = 0;
+        num_columns_ = 0;
+    }
+
+    Matrix(int num_rows, int num_columns) {
+        Reset(num_rows, num_columns);
+    }
+
+    void Reset(int num_rows, int num_columns) {
+        if (num_rows < 0) {
+            throw out_of_range("num_rows must be >= 0");
+        }
+        if (num_columns < 0) {
+            throw out_of_range("num_columns must be >= 0");
+        }
+        if (num_rows == 0 || num_columns == 0) {
+            num_rows = num_columns = 0;
+        }
+
+        num_rows_ = num_rows;
+        num_columns_ = num_columns;
+        elements_.assign(num_rows, vector<int>(num_columns));
+    }
+
+    int& At(int row, int column) {
+        return elements_.at(row).at(column);
+    }
+
+    int At(int row, int column) const {
+        return elements_.at(row).at(column);
+    }
+
+    int GetNumRows() const {
+        return num_rows_;
+    }
+
+    int GetNumColumns() const {
+        return num_columns_;
+    }
+};
+
+bool operator==(const Matrix& one, const Matrix& two) {
+    if (one.GetNumRows() != two.GetNumRows()) {
+        return false;
+    }
+
+    if (one.GetNumColumns() != two.GetNumColumns()) {
+        return false;
+    }
+
+    for (int row = 0; row < one.GetNumRows(); ++row) {
+        for (int column = 0; column < one.GetNumColumns(); ++column) {
+            if (one.At(row, column) != two.At(row, column)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+Matrix operator+(const Matrix& one, const Matrix& two) {
+    if (one.GetNumRows() != two.GetNumRows()) {
+        throw invalid_argument("Mismatched number of rows");
+    }
+
+    if (one.GetNumColumns() != two.GetNumColumns()) {
+        throw invalid_argument("Mismatched number of columns");
+    }
+
+    Matrix result(one.GetNumRows(), one.GetNumColumns());
+    for (int row = 0; row < result.GetNumRows(); ++row) {
+        for (int column = 0; column < result.GetNumColumns(); ++column) {
+            result.At(row, column) = one.At(row, column) + two.At(row, column);
+        }
+    }
+
+    return result;
+}
+
+istream& operator>>(istream& in, Matrix& matrix) {
+    int num_rows, num_columns;
+    in >> num_rows >> num_columns;
+
+    matrix.Reset(num_rows, num_columns);
+    for (int row = 0; row < num_rows; ++row) {
+        for (int column = 0; column < num_columns; ++column) {
+            in >> matrix.At(row, column);
+        }
+    }
+
+    return in;
+}
+
+ostream& operator<<(ostream& out, const Matrix& matrix) {
+    out << matrix.GetNumRows() << " " << matrix.GetNumColumns() << endl;
+    for (int row = 0; row < matrix.GetNumRows(); ++row) {
+        for (int column = 0; column < matrix.GetNumColumns(); ++column) {
+            if (column > 0) {
+                out << " ";
+            }
+            out << matrix.At(row, column);
+        }
+        out << endl;
+    }
+
+    return out;
+}
+
+int main() {
+    Matrix one;
+    Matrix two;
+
+    // cin >> one >> two;
+    // cout << one + two << endl;
+
+    string command;
+    while (getline(cin, command)) {
+        stringstream s(command);
+        s >> one >> two;
+        cout << one + two << endl;
+    }
+    
+    return 0;
+}
 */
 
 
