@@ -20,30 +20,40 @@ struct Region {
     int64_t population;
 };
 
+bool operator==(Region& lhs, Region& rhs) {
+    auto left = tie(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population);
+    auto right = tie(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
+    // tuple<string, string, map<Lang, string>, int64_t> one(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population);
+    // tuple<string, string, map<Lang, string>, int64_t> two(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
+    return left == right;
+}
+
 int FindMaxRepetitionCount(const vector<Region>& regions) {
     vector<Region> search = regions;
-    int total_reps = 1;
+    int total_reps = 0;
     if (regions.empty()) {
-        return 0;
+        return total_reps;
     }
-    for (int item = static_cast<int>(regions.size()); item > 0; search.pop_back()) {
+    for (int item = static_cast<int>(regions.size()); item > 0; item--) {
         auto item_copy = search[item -1];
-        for (const auto& region : search) {
-            if (item_copy == region) {
+        search.pop_back();
+        // for (auto& region : search) {
+            // if (item_copy == region) {
+        for (int i = 0; i < static_cast<int>(search.size()); i) {
+            auto compare = search[i];
+            if (item_copy == compare) {
                 total_reps++;
+                search.erase(search.begin() + i);
+                item--;
+            } else {
+                i++;
             }
         }
     }
-    return total_reps;
-}
-
-bool operator==(const Region& lhs, const Region& rhs) {
-    tuple<string, string, map<Lang, string>, int64_t> one(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population);
-    tuple<string, string, map<Lang, string>, int64_t> two(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
-    if (one == two) {
-        return true;
+    if (total_reps == 0) {
+        return 1;
     } else {
-        return false;
+        return total_reps;
     }
 }
 
