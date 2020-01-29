@@ -8,8 +8,6 @@
 
 using namespace std;
 
-// WORK IN PROGRESS
-
 enum class Lang {
     DE, FR, IT
 };
@@ -21,14 +19,39 @@ struct Region {
     int64_t population;
 };
 
-
 bool operator==(const Region& lhs, const Region& rhs) {
     // tuple<string, string, map<Lang, string>, int64_t> one(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population);
     // tuple<string, string, map<Lang, string>, int64_t> two(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
     return tie(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population) == tie(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
 }
 
+bool operator<(const Region& lhs, const Region& rhs) {
+    // tuple<string, string, map<Lang, string>, int64_t> one(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population);
+    // tuple<string, string, map<Lang, string>, int64_t> two(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
+    return tie(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population) < tie(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
+}
 
+int FindMaxRepetitionCount(const vector<Region>& regions) {
+    int max_reps = 0;
+    if (regions.empty()) {
+        return max_reps;
+    }
+    set<Region> search(regions.begin(), regions.end());
+    for (const auto& region : search) {
+        int r = 0;
+        for (const auto& compare : regions) {
+            if (region == compare) {
+                r++;
+            }
+        }
+        if (r > max_reps) {
+            max_reps = r;
+        }
+    }
+    return max_reps;
+}
+
+/*
 // TODO: Must be faster
 int FindMaxRepetitionCount(const vector<Region>& regions) {
     // vector<Region> search = regions;
@@ -49,7 +72,7 @@ int FindMaxRepetitionCount(const vector<Region>& regions) {
     }
     return max_reps;
 }
-
+*/
 /* Max repetitions of one Region counter
 int FindMaxRepetitionCount(const vector<Region>& regions) {
     vector<Region> search = regions;
@@ -77,7 +100,7 @@ int FindMaxRepetitionCount(const vector<Region>& regions) {
     }
     return reps;
 }
-
+*/
 /* Total repetitions counting version
 int FindMaxRepetitionCount(const vector<Region>& regions) {
     vector<Region> search = regions;
@@ -195,8 +218,29 @@ int main() {
     return 0;
 }
 
-/* MIPT and Yandex implementation:
+/* MIPT and Yandex implementation (preferred):
+Внимание! Ниже опубликовано решение необязательной задачи «База регионов». 
+Настоятельно рекомендуем попытаться её решить перед тем, как читать решение.
 
+#include <map>
+#include <tuple>
+#include <vector>
+
+using namespace std;
+
+bool operator<(const Region& lhs, const Region& rhs) {
+    return tie(lhs.std_name, lhs.parent_std_name, lhs.names, lhs.population) <
+            tie(rhs.std_name, rhs.parent_std_name, rhs.names, rhs.population);
+}
+
+int FindMaxRepetitionCount(const vector<Region>& regions) {
+    int result = 0;
+    map<Region, int> repetition_count;
+    for (const Region& region : regions) {
+        result = max(result, ++repetition_count[region]);
+    }
+    return result;
+}
 */
 
 
