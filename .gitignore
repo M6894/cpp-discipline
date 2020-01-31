@@ -2,6 +2,7 @@
 *.out
 *.exe
 *.pdf
+*.stackdump
 project_template.cpp
 
 # Folders
