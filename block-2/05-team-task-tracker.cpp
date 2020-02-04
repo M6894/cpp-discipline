@@ -23,14 +23,54 @@ using TasksInfo = map<TaskStatus, int>;
 class TeamTasks {
 public:
     // Получить статистику по статусам задач конкретного разработчика
-    const TasksInfo& GetPersonTasksInfo(const string& person) const;
+    const TasksInfo& GetPersonTasksInfo(const string& person) const {
+        // if (person_tasks.count(person) == 1) {
+            return person_tasks.at(person);
+        // }
+    }
     
     // Добавить новую задачу (в статусе NEW) для конкретного разработчитка
-    void AddNewTask(const string& person);
+    void AddNewTask(const string& person) {
+        person_tasks[person][TaskStatus::NEW]++;
+    }
     
     // Обновить статусы по данному количеству задач конкретного разработчика,
     // подробности см. ниже
-    tuple<TasksInfo, TasksInfo> PerformPersonTasks(const string& person, int task_count);
+    tuple<TasksInfo, TasksInfo> PerformPersonTasks(const string& person, int task_count) {
+        TasksInfo updated;
+        TasksInfo untouched;
+        if (person_tasks.count(person) == 0) {
+            return make_pair(updated, untouched); // DEBUG (pair - tuple)
+        } else {
+            auto tasks = person_tasks[person];
+            int move_count = 0;
+            for (auto& [task, number] : person_tasks[person]) {
+                if (number <= task_count) {
+                    if (move_count == 0) {
+                        move_count += number;
+                        task_count -= number;
+                        tasks.erase(task);
+                    } else {
+                        // TODO - не удаляем вид задачи, т.к. старые все обновим, но прибавим перемещенные
+                        int temp_move_count = number;
+                        tasks[task] = move_count;
+
+
+                    }
+                } else {
+                    // Add move_count addition
+                    number -= task_count;
+                    updated[task] = task_count;
+                    task_count = 0;
+                }
+
+            }
+            person_tasks[person] = tasks;
+            return make_pair(updated, untouched);
+        }
+    }
+private:
+    map<string, TasksInfo> person_tasks;
 };
 
 // Принимаем словарь по значению, чтобы иметь возможность
@@ -53,7 +93,7 @@ int main() {
     PrintTasksInfo(tasks.GetPersonTasksInfo("Ilia"));
     cout << "Ivan's tasks: ";
     PrintTasksInfo(tasks.GetPersonTasksInfo("Ivan"));
-    
+    /*
     TasksInfo updated_tasks, untouched_tasks;
     
     tie(updated_tasks, untouched_tasks) = tasks.PerformPersonTasks("Ivan", 2);
@@ -67,7 +107,7 @@ int main() {
     PrintTasksInfo(updated_tasks);
     cout << "Untouched Ivan's tasks: ";
     PrintTasksInfo(untouched_tasks);
-
+    */
     return 0;
 }
 
