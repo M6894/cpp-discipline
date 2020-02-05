@@ -44,26 +44,39 @@ public:
         } else {
             auto tasks = person_tasks[person];
             int move_count = 0;
-            for (auto& [task, number] : person_tasks[person]) {
-                if (number <= task_count) {
+            for (const auto& [task, number] : person_tasks[person]) {
+                if (task_count >= number && task_count != 0) { // debug (0 number)
                     if (move_count == 0) {
                         move_count += number;
                         task_count -= number;
                         tasks.erase(task);
                     } else {
-                        // TODO - не удаляем вид задачи, т.к. старые все обновим, но прибавим перемещенные
+                        // не удаляем вид задачи, т.к. старые все обновим, 
+                        // но прибавим перемещенные
                         int temp_move_count = number;
                         tasks[task] = move_count;
-
-
+                        updated[task] = move_count;
+                        move_count = temp_move_count;
                     }
-                } else {
+                } else if (task_count != 0) {
                     // Add move_count addition
-                    number -= task_count;
-                    updated[task] = task_count;
+                    tasks[task] -= task_count;
+                    untouched[task] = number;
+                    int temp_move_count = task_count;
                     task_count = 0;
+                    if (move_count == 0) {
+                        move_count = temp_move_count;
+                    } else {
+                        tasks[task] += move_count;
+                        updated[task] = move_count;
+                        move_count = temp_move_count;
+                    }
+                } else { // Only update untouched or add move_count and update updated
+                    if (move_count == 0) {
+                        untouched[task] = number; // добавить проверку нулевого number и дописать
+                        // TODO
+                    }
                 }
-
             }
             person_tasks[person] = tasks;
             return make_pair(updated, untouched);
