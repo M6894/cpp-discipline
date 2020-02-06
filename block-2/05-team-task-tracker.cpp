@@ -43,25 +43,32 @@ public:
             return make_pair(updated, untouched); // DEBUG (pair - tuple)
         } else {
             auto tasks = person_tasks[person];
+            // Приравниваем task_count к количеству невыполненных задач
+            int incomplete_tasks_count = 0;
+            for (const auto& t : tasks) {
+                incomplete_tasks_count += t.second;
+            }
+            if (task_count > incomplete_tasks_count) {
+                task_count = incomplete_tasks_count;
+            }
+            // TODO: Create zero numbers to iterate
+            // Perform tasks
             int move_count = 0;
             for (const auto& [task, number] : person_tasks[person]) {
-                if (task_count >= number && task_count != 0) { // debug (0 number)
+                if (task_count >= number && task_count != 0) { // debug (0 number) // seems ok
                     if (move_count == 0) {
                         move_count += number;
                         task_count -= number;
                         tasks.erase(task);
                     } else {
-                        // не удаляем вид задачи, т.к. старые все обновим, 
-                        // но прибавим перемещенные
                         int temp_move_count = number;
                         tasks[task] = move_count;
                         updated[task] = move_count;
                         move_count = temp_move_count;
                     }
                 } else if (task_count != 0) {
-                    // Add move_count addition
                     tasks[task] -= task_count;
-                    untouched[task] = number;
+                    untouched[task] = tasks[task];
                     int temp_move_count = task_count;
                     task_count = 0;
                     if (move_count == 0) {
@@ -72,9 +79,16 @@ public:
                         move_count = temp_move_count;
                     }
                 } else { // Only update untouched or add move_count and update updated
-                    if (move_count == 0) {
-                        untouched[task] = number; // добавить проверку нулевого number и дописать
-                        // TODO
+                    if (number == 0) {
+                        tasks.erase(task);
+                    } else {
+                        if (move_count == 0) {
+                            untouched[task] = number;
+                        } else {
+                            untouched[task] = number;
+                            updated[task] = move_count;
+                            tasks[task] += move_count;
+                        }
                     }
                 }
             }
@@ -106,7 +120,6 @@ int main() {
     PrintTasksInfo(tasks.GetPersonTasksInfo("Ilia"));
     cout << "Ivan's tasks: ";
     PrintTasksInfo(tasks.GetPersonTasksInfo("Ivan"));
-    /*
     TasksInfo updated_tasks, untouched_tasks;
     
     tie(updated_tasks, untouched_tasks) = tasks.PerformPersonTasks("Ivan", 2);
@@ -120,7 +133,6 @@ int main() {
     PrintTasksInfo(updated_tasks);
     cout << "Untouched Ivan's tasks: ";
     PrintTasksInfo(untouched_tasks);
-    */
     return 0;
 }
 
