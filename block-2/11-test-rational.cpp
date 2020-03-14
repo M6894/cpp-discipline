@@ -213,9 +213,8 @@ bool operator < (const Rational& lhs, const Rational& rhs) {
 }
 
 void TestConstructor() {
-    Rational test;
-    AssertEqual(test.Numerator(), 0, "Zero numerator");
-    AssertEqual(test.Denominator(), 1, "1 denominator");
+    AssertEqual(Rational().Numerator(), 0, "Zero numerator");
+    AssertEqual(Rational().Denominator(), 1, "1 denominator");
 }
 
 void TestFractionReduction() {
@@ -226,24 +225,186 @@ void TestFractionReduction() {
     Rational test2(2147483646, 1073741823);
     AssertEqual(test2.Numerator(), 2, "Max int num");
     AssertEqual(test2.Denominator(), 1, "Half max int denom");
+
+    Rational test3(1, 2);
+    AssertEqual(test3.Numerator(), 1, "Same num");
+    AssertEqual(test3.Denominator(), 2, "Same denom");
+
+    Rational test4(8, 12);
+    AssertEqual(test4.Numerator(), 2, "8/12 - 2/3 num");
+    AssertEqual(test4.Denominator(), 3, "8/12 - 2/3 denom");
+
+    Rational test5(4, -6);
+    AssertEqual(test5.Numerator(), -2, "4/-6 - -2/3 num");
+    AssertEqual(test5.Denominator(), 3, "4/-6 - -2/3 denom");
+
+    AssertEqual(Rational(0, 15).Numerator(), 0, "0/15 - 0/1 num");
+    AssertEqual(Rational(0, 15).Denominator(), 1, "0/15 - 0/1 denom");
+}
+
+void TestNegative() {
+    Rational test(-1, 2);
+    AssertEqual(test.Numerator(), -1, "negative num - negative num");
+    AssertEqual(test.Denominator(), 2, "negative num - positive denom");
+
+    Rational test2(1, -2);
+    AssertEqual(test2.Numerator(), -1, "negative denom - negative num");
+    AssertEqual(test2.Denominator(), 2, "negative denom - positive denom");
+}
+
+void TestPositive() {
+    Rational test(1, 2);
+    AssertEqual(test.Numerator(), 1, "positive num - positive num");
+    AssertEqual(test.Denominator(), 2, "positive denom - positive denom");
+
+    Rational test2(-1, -2);
+    AssertEqual(test2.Numerator(), 1, "negative num - positive num");
+    AssertEqual(test2.Denominator(), 2, "negative denom - positive denom");
+
+    Rational test3(-2, -3);
+    AssertEqual(test3.Numerator(), 2, "negative num - positive num");
+    AssertEqual(test3.Denominator(), 3, "negative denom - positive denom");
 }
 
 void TestAll() {
     TestRunner runner;
     runner.RunTest(TestConstructor, "TestConstructor");
     runner.RunTest(TestFractionReduction, "TestFractionDeduction");
+    runner.RunTest(TestNegative, "TestNegative");
+    runner.RunTest(TestPositive, "TestPositive");
 }
 
 int main() {
     TestAll();
     // добавьте сюда свои тесты
-    cout << numeric_limits<int>::max() << endl;
-    cout << numeric_limits<int>::min() << endl;
+    cerr << numeric_limits<int>::max() << endl;
+    cerr << numeric_limits<int>::min() << endl;
     return 0;
 }
 
 /* MIPT and Yandex implementation:
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
+using namespace std;
+
+template <class T>
+ostream& operator << (ostream& os, const vector<T>& s) {
+    os << "{";
+    bool first = true;
+    for (const auto& x : s) {
+        if (!first) {
+            os << ", ";
+        }
+        first = false;
+        os << x;
+    }
+    return os << "}";
+}
+
+template <class T>
+ostream& operator << (ostream& os, const set<T>& s) {
+    os << "{";
+    bool first = true;
+    for (const auto& x : s) {
+        if (!first) {
+            os << ", ";
+        }
+        first = false;
+        os << x;
+    }
+    return os << "}";
+}
+
+template <class K, class V>
+ostream& operator << (ostream& os, const map<K, V>& m) {
+    os << "{";
+    bool first = true;
+    for (const auto& kv : m) {
+        if (!first) {
+            os << ", ";
+        }
+        first = false;
+        os << kv.first << ": " << kv.second;
+    }
+    return os << "}";
+}
+
+template<class T, class U>
+void AssertEqual(const T& t, const U& u, const string& hint = {}) {
+    if (t != u) {
+        ostringstream os;
+        os << "Assertion failed: " << t << " != " << u;
+        if (!hint.empty()) {
+             os << " hint: " << hint;
+        }
+        throw runtime_error(os.str());
+    }
+}
+
+void Assert(bool b, const string& hint) {
+    AssertEqual(b, true, hint);
+}
+
+class TestRunner {
+public:
+    template <class TestFunc>
+    void RunTest(TestFunc func, const string& test_name) {
+        try {
+            func();
+            cerr << test_name << " OK" << endl;
+        } catch (exception& e) {
+            ++fail_count;
+            cerr << test_name << " fail: " << e.what() << endl;
+        } catch (...) {
+            ++fail_count;
+            cerr << "Unknown exception caught" << endl;
+        }
+    }
+
+    ~TestRunner() {
+        if (fail_count > 0) {
+            cerr << fail_count << " unit tests failed. Terminate" << endl;
+            exit(1);
+        }
+    }
+
+private:
+    int fail_count = 0;
+};
+
+void TestPredefined() {
+    AssertEqual(Rational(1, 1).Numerator(), 1, "Canonical form of 1/1 is 1/1");
+    AssertEqual(Rational(1, 1).Denominator(), 1, "Canonical form of 1/1 is 1/1");
+    AssertEqual(Rational(3, 5).Numerator(), 3, "Canonical form of 3/5 is 3/5");
+    AssertEqual(Rational(3, 5).Denominator(), 5, "Canonical form of 3/5 is 3/5");
+    AssertEqual(Rational(2147483647, 2147483647).Numerator(), 1, "Canonical form of 2147483647/2147483647 is 1/1");
+    AssertEqual(Rational(2147483647, 2147483647).Denominator(), 1, "Canonical form of 2147483647/2147483647 is 1/1");
+    AssertEqual(Rational(-5, 4).Numerator(), -5, "Canonical form of -5/4 is -5/4");
+    AssertEqual(Rational(-5, 4).Denominator(), 4, "Canonical form of -5/4 is -5/4");
+    AssertEqual(Rational(5, -4).Numerator(), -5, "Canonical form of 5/-4 is -5/4");
+    AssertEqual(Rational(5, -4).Denominator(), 4, "Canonical form of 5/-4 is -5/4");
+    AssertEqual(Rational(-6, -2).Numerator(), 3, "Canonical form of -6/-2 is 3/1");
+    AssertEqual(Rational(-6, -2).Denominator(), 1, "Canonical form of -6/-2 is 3/1");
+    AssertEqual(Rational(21, 56).Numerator(), 3, "Canonical form of 21/56 is 3/8");
+    AssertEqual(Rational(21, 56).Denominator(), 8, "Canonical form of 21/56 is 3/8");
+    AssertEqual(Rational(0, 100).Numerator(), 0, "Canonical form of 0/100 is 0/1");
+    AssertEqual(Rational(0, 100).Denominator(), 1, "Canonical form of 0/100 is 0/1");
+    AssertEqual(Rational().Numerator(), 0, "Canonical form of default constructed is 0/1");
+    AssertEqual(Rational().Denominator(), 1, "Canonical form of default constructed is 0/1");
+}
+
+int main() {
+    TestRunner runner;
+    runner.RunTest(TestPredefined, "TestPredefined");
+    return 0;
+}
 */
 
 
