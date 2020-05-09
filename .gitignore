@@ -4,6 +4,7 @@
 *.pdf
 *.stackdump
 project_template.cpp
+*.tar.xz
 
 # Folders
 .vscode/
