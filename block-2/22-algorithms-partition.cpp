@@ -5,15 +5,15 @@
 
 using namespace std;
 
+enum class Gender {
+    FEMALE,
+    MALE
+};
+
 struct Person {
     int age;  // возраст
     Gender gender;  // пол
     bool is_employed;  // имеет ли работу
-};
-
-enum class Gender {
-    FEMALE,
-    MALE
 };
 
 template <typename InputIt>
@@ -32,7 +32,18 @@ int ComputeMedianAge(InputIt range_begin, InputIt range_end) {
     return middle->age;
 }
 
-void PrintStats(vector<Person> persons);
+void PrintStats(vector<Person> persons) {
+cout << "Median age = " << ComputeMedianAge(persons.begin(), persons.end()) << endl;
+cout << "Median age for females = " << ComputeMedianAge(persons.begin(), 
+    partition(persons.begin(), persons.end(), 
+    [](auto& person) { return person.gender == Gender::FEMALE; })) 
+    << endl;
+// "Median age for males = "
+// "Median age for employed females = "
+// "Median age for unemployed females = "
+// "Median age for employed males = "
+// "Median age for unemployed males = "
+}
 
 int main() {
     vector<Person> persons = {
